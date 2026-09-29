@@ -18,10 +18,13 @@
       </thead>
       <tbody>
         <tr v-for="row in moduleRows" :key="row.name">
-          <td>{{ row.name }}</td>
+          <td>{{ row.label ?? row.name }}</td>
           <td>{{ row.created }}</td>
           <td>{{ row.pending }}</td>
           <td>{{ row.abnormal }}</td>
+        </tr>
+        <tr v-if="!moduleRows.length">
+          <td colspan="4" class="empty-state">暂无模块数据，请确认基础数据已初始化</td>
         </tr>
       </tbody>
     </table>
@@ -35,7 +38,7 @@ import { fetchJson } from '@/api/client'
 
 type Overview = {
   cards: { label: string; value: number }[]
-  modules: { name: string; created: number; pending: number; abnormal: number }[]
+  modules: { name: string; label: string; created: number; pending: number; abnormal: number }[]
 }
 
 const cards = ref<Overview['cards']>([])
@@ -45,10 +48,11 @@ onMounted(async () => {
   try {
     const payload = await fetchJson<Overview>('/api/overview')
     cards.value = payload.cards
+    // 模块清单与“业务模块”卡片数都来自后端同一份示例数据，前端不再维护硬编码列表
     moduleRows.value = payload.modules
   } catch {
-    cards.value = [{"label": "业务模块", "value": 0}, {"label": "今日新增", "value": 0}]
-    moduleRows.value = [{"name": "锅炉设备", "created": 0, "pending": 0, "abnormal": 0}, {"name": "压力容器", "created": 0, "pending": 0, "abnormal": 0}, {"name": "压力管道", "created": 0, "pending": 0, "abnormal": 0}, {"name": "起重机械", "created": 0, "pending": 0, "abnormal": 0}, {"name": "电梯设备", "created": 0, "pending": 0, "abnormal": 0}, {"name": "场内机动车辆", "created": 0, "pending": 0, "abnormal": 0}, {"name": "点检计划", "created": 0, "pending": 0, "abnormal": 0}, {"name": "点检记录", "created": 0, "pending": 0, "abnormal": 0}, {"name": "润滑保养", "created": 0, "pending": 0, "abnormal": 0}, {"name": "定期检验", "created": 0, "pending": 0, "abnormal": 0}, {"name": "检验报告", "created": 0, "pending": 0, "abnormal": 0}, {"name": "隐患登记", "created": 0, "pending": 0, "abnormal": 0}, {"name": "整改闭环", "created": 0, "pending": 0, "abnormal": 0}, {"name": "使用登记", "created": 0, "pending": 0, "abnormal": 0}, {"name": "作业人员", "created": 0, "pending": 0, "abnormal": 0}, {"name": "备件器材", "created": 0, "pending": 0, "abnormal": 0}, {"name": "维保合同", "created": 0, "pending": 0, "abnormal": 0}, {"name": "费用结算", "created": 0, "pending": 0, "abnormal": 0}]
+    cards.value = []
+    moduleRows.value = []
   }
 })
 </script>

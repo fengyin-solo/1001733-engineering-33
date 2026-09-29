@@ -1,3 +1,4 @@
-fastapi>=0.110
-uvicorn[standard]>=0.29
-pydantic>=2.6
+# 直接依赖：版本锁定，构建以 requirements.lock.txt 为准
+fastapi==0.141.1
+uvicorn[standard]==0.54.0
+pydantic==2.13.5

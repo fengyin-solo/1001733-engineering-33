@@ -18,6 +18,7 @@ class InspectService:
         *,
         keyword: str | None = None,
         status: str | None = None,
+        category: str | None = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[dict[str, Any]], int]:
@@ -26,6 +27,8 @@ class InspectService:
             rows = [row for row in rows if keyword in str(row.get("检验编号", ""))]
         if status:
             rows = [row for row in rows if row.get("status") == status]
+        if category:
+            rows = [row for row in rows if row.get("检验类别") == category]
         total = len(rows)
         start = max(page - 1, 0) * size
         return rows[start:start + size], total
@@ -33,13 +36,21 @@ class InspectService:
     def get_entry(self, entry_id: int) -> dict[str, Any] | None:
         return store.find(MODULE, entry_id)
 
-    def create_entry(self, values: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str]]:
+    def create_entry(self, values: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str] | str]:
         missing = [field for field in REQUIRED_FIELDS if not str(values.get(field) or "").strip()]
         if missing:
             return None, missing
+        category = str(values.get("检验类别") or "").strip()
+        if category and category not in store.inspect_categories():
+            return None, f"检验类别「{category}」不在基础数据里，请从 /api/inspect/categories 选取"
+        agency = str(values.get("检验机构") or "").strip()
+        if agency and agency not in store.inspect_agencies():
+            return None, f"检验机构「{agency}」不在基础数据里，请从 /api/inspect/agencies 选取"
         rows = store.rows(MODULE)
         entry = {"id": max((int(row.get("id", 0)) for row in rows), default=0) + 1}
         entry.update({field: values.get(field) for field in REQUIRED_FIELDS})
+        if agency:
+            entry["检验机构"] = agency
         entry["status"] = STATUS_ORDER[0]
         entry["pending"] = True
         entry["abnormal"] = False
