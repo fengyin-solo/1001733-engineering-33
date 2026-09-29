@@ -30,6 +30,29 @@ def list_entries(
     return PageResult(items=items, total=total, page=page, size=size)
 
 
+# 注意：以下静态子路径必须声明在 /{entry_id} 之前，
+# 否则 "export" 会被当成 entry_id 解析成 int，直接返回 422。
+@router.get("/categories", response_model=PageResult[dict])
+def list_categories() -> PageResult[dict]:
+    """检验类别基础数据：上线即有值，无需手工补录。"""
+    items = service.categories()
+    return PageResult(items=items, total=len(items), page=1, size=len(items))
+
+
+@router.get("/agencies", response_model=PageResult[dict])
+def list_agencies() -> PageResult[dict]:
+    """检验机构基础数据：上线即有值，无需手工补录。"""
+    items = service.agencies()
+    return PageResult(items=items, total=len(items), page=1, size=len(items))
+
+
+@router.get("/export")
+def export_entries() -> dict[str, Any]:
+    """导出定期检验清单：返回当前过滤条件下的全量数据。"""
+    items, total = service.list_entries(page=1, size=10000)
+    return {"module": "inspect", "total": total, "items": items}
+
+
 @router.get("/{entry_id}", response_model=dict)
 def get_entry(entry_id: int) -> dict:
     """读取单条检验任务明细；不存在时给出可读的错误说明。"""
@@ -56,10 +79,3 @@ def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
     if entry is None:
         return ActionResult(ok=False, message=message)
     return ActionResult(ok=True, message=message, entry=entry)
-
-
-@router.get("/export")
-def export_entries() -> dict[str, Any]:
-    """导出定期检验清单：返回当前过滤条件下的全量数据。"""
-    items, total = service.list_entries(page=1, size=10000)
-    return {"module": "inspect", "total": total, "items": items}

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.seed import AGENCY_TABLE, CATEGORY_TABLE
 from app.store import store
 
 MODULE = "inspect"
@@ -13,6 +14,14 @@ NEGATIVE_ACTIONS = []
 
 
 class InspectService:
+    def categories(self) -> list[dict[str, Any]]:
+        """检验类别基础数据：登记检验任务时的候选值。"""
+        return store.rows(CATEGORY_TABLE)
+
+    def agencies(self) -> list[dict[str, Any]]:
+        """检验机构基础数据：登记检验任务时的候选值。"""
+        return store.rows(AGENCY_TABLE)
+
     def list_entries(
         self,
         *,

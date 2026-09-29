@@ -1,13 +1,27 @@
 services:
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    env_file:
+      # 与本地开发同一份配置基线；部署机可用同名环境变量覆盖其中的值。
+      - .env.example
     environment:
-      - APP_ENV=local
+      # 容器内必须监听所有网卡，外部端口映射仍以 APP_PORT 为准。
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8000"
+    ports:
+      # 主机侧端口取自 --env-file .env.example 的 APP_PORT（默认 8000）；
+      # 容器内部固定监听 8000，不随主机端口变化。
+      - "${APP_PORT:-8000}:8000"
   frontend:
     build: ./frontend
+    env_file:
+      - .env.example
+    environment:
+      VITE_HOST: 0.0.0.0
+      # 容器内 dev server 固定 5173，代理目标指向 compose 网络里的 backend。
+      FRONTEND_PORT: "5173"
+      VITE_PROXY_TARGET: http://backend:8000
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     depends_on:
       - backend
